@@ -45,7 +45,9 @@ bash agent.sh <api_url> <access_token> <interval_seconds>
 - `Content-Type: application/json`
 - `Authorization: Bearer <access_token>`
 - 逾時 30 秒
-- 成功時把 API 回應印到 stdout
+- 成功時把 API 回應印到 stdout，並換行
+- 日誌統一追加寫入腳本目錄的 `agent.log`
+- 每一行格式為 `[時間][api_url][access_token] <請求 JSON> <伺服器回應>`
 - 單次採集或 HTTP 失敗只寫到 stderr，進程繼續
 - 參數不正確、缺少 `curl`、`flock` 或 `metrics.sh` 時，結束碼為 1
 - 同一組 `api_url` 與 `access_token` 不能同時跑兩個進程；第二個會立刻失敗

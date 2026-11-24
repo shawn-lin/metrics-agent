@@ -7,7 +7,7 @@
 - bash
 - `/proc` 與 `df`
 - 查詢 IP 時需要系統已安裝的 `ip`（iproute2）；沒有則 `ip` 欄位為空字串
-- 推送時需要 `curl`
+- 推送時需要 `curl`、`flock` 與 `sha256sum`
 
 ## 採集
 
@@ -35,14 +35,17 @@ bash metrics.sh
 
 ## 推送
 
-`agent.sh` 執行同目錄的 `metrics.sh`，再以 POST 把 JSON 送到主節點。
+`agent.sh` 持續執行同目錄的 `metrics.sh`，再以 POST 把 JSON 送到主節點。啟動後立刻回報一次，然後等待指定秒數再重複。等待時間不含採集本身約 1 秒。
 
 ```bash
-bash agent.sh <api_url> <access_token>
+bash agent.sh <api_url> <access_token> <interval_seconds>
 ```
 
+- `interval_seconds`：兩次回報之間的等待秒數，非負整數
 - `Content-Type: application/json`
 - `Authorization: Bearer <access_token>`
 - 逾時 30 秒
 - 成功時把 API 回應印到 stdout
-- 參數缺少、`metrics.sh` 失敗，或 HTTP 非 2xx 時，結束碼非 0
+- 單次採集或 HTTP 失敗只寫到 stderr，進程繼續
+- 參數不正確、缺少 `curl`、`flock` 或 `metrics.sh` 時，結束碼為 1
+- 同一組 `api_url` 與 `access_token` 不能同時跑兩個進程；第二個會立刻失敗
